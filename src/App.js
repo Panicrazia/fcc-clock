@@ -17,70 +17,67 @@ class App extends Component {
       sessionLength: Defaults[1],
       currentTimeLeft: Defaults[2],
       isBreakTime: Defaults[3],
-      isRunning: Defaults[4],
-      //TODO: remove after fix
-      isHackyBandaidEnabled: false
+      isRunning: Defaults[4]
     }
     this.changeTimerLength = this.changeTimerLength.bind(this);
     this.tick = this.tick.bind(this);
     this.toggleTimer = this.toggleTimer.bind(this);
     this.resetTimer = this.resetTimer.bind(this);
-    //TODO: remove after fix
-    this.toggleHackyBandaidFix = this.toggleHackyBandaidFix.bind(this);
-    this.specialFunctionToResetTimerBecauseTheFCCCheckerIsBrokenAndRandomlySetsMySessionTimeToNegative36 = this.specialFunctionToResetTimerBecauseTheFCCCheckerIsBrokenAndRandomlySetsMySessionTimeToNegative36.bind(this);
   }
 
   changeTimerLength(type, ammount) {
     if(type==="Break"){
-      if((this.state.breakLength + ammount) <= 60 
-      && (this.state.breakLength + ammount) > 0){
-        this.setState((state, props) => ({
-          breakLength: state.breakLength + ammount
-        }));
-      }
+      this.setState((state, props) => {
+        if((state.breakLength + ammount) <= 60 
+        && (state.breakLength + ammount) > 0){
+          var returner = {
+            breakLength: state.breakLength + ammount
+          }
+          if(!state.isRunning && state.isBreakTime){
+            returner.currentTimeLeft = returner.breakLength * 60
+          }
+          return returner;
+        }
+      });
     }
     else{
-      if((this.state.sessionLength + ammount) <= 60 
-      && (this.state.sessionLength + ammount) > 0){
-        this.setState((state, props) => ({
-          sessionLength: state.sessionLength + ammount
-        }));
-      }
-    }
-    if(!this.state.isRunning){
-      this.setState((state, props) => ({
-        currentTimeLeft: state.sessionLength * 60
-      }));
+      this.setState((state, props) => {
+        if((state.sessionLength + ammount) <= 60 
+        && (state.sessionLength + ammount) > 0){
+          var returner = {
+            sessionLength: state.sessionLength + ammount
+          }
+          if(!state.isRunning && !state.isBreakTime){
+            returner.currentTimeLeft = returner.sessionLength * 60
+          }
+          return returner;
+        }
+      });
     }
   }
 
   tick(){
-    //TODO: remove after fix
-    if(this.state.isHackyBandaidEnabled){
-      if(this.state.sessionLength === -36){
-        //yes its better to check if its below 0
-        //but I feel the need to answer randomly specific bullshit with randomly specific bullshit
-        this.specialFunctionToResetTimerBecauseTheFCCCheckerIsBrokenAndRandomlySetsMySessionTimeToNegative36()
-      }
-    }
-    this.setState((state) => ({
-      currentTimeLeft: state.currentTimeLeft - 1
-    }), () => {
-      var timeToSet = this.state.currentTimeLeft;
-      if(timeToSet < 0){
+    this.setState((state) => {
+      var newTime = state.currentTimeLeft - 1;
+      if(newTime < 0){
         this.ring();
         if(!this.state.isBreakTime){
-          this.setState((state, props) => ({
+          return{
             currentTimeLeft: state.breakLength * 60,
             isBreakTime: !state.isBreakTime
-          }));
+          };
         }
         else{
-          this.setState((state, props) => ({
+          return{
             currentTimeLeft: state.sessionLength * 60,
             isBreakTime: !state.isBreakTime
-          }));
+          };
         }
+      }
+      else{
+        return{
+          currentTimeLeft: newTime
+        };
       }
     });
   }
@@ -120,53 +117,23 @@ class App extends Component {
       sessionLength: Defaults[1],
       currentTimeLeft: Defaults[2],
       isBreakTime: Defaults[3],
-      isRunning: Defaults[4],
-    });
-  }
-
-  toggleHackyBandaidFix() {
-    this.setState((state) => ({
-      isHackyBandaidEnabled: !(state.isHackyBandaidEnabled)
-    }));
-  }
-
-  specialFunctionToResetTimerBecauseTheFCCCheckerIsBrokenAndRandomlySetsMySessionTimeToNegative36() {
-    /**there is a bug in the checker that for some reason on specifically step 24 
-     * it decides to hard set sessionLength in state to -36.
-     * I shouldnt have to do this because otherwise it works exactly as it should in the specs. 
-     * So simply just resetting for this specific scenario, 
-     * and giving it a little speed boost is the only way I have seemed to been able to pass this
-     * the speed boost is just so I dont have to wait longer, 
-     * it does still work if just using the normal reset function
-     * 
-     * 
-     * 
-     * Why are we still here? 
-     * Just to suffer? 
-     * Every night, I can feel my leg… 
-     * and my arm… 
-     * even my fingers. 
-     * 
-     * The body I’ve lost… 
-     * the comrades I’ve lost… 
-     * won’t stop hurting… 
-     * It’s like they’re all still there. 
-     * 
-     * You feel it, too, don’t you?
-     */
-    if(this.clockID != null){
-      clearInterval(this.clockID);
-      this.clockID = null;
-    }
-    this.setState({
-      breakLength: 1,
-      sessionLength: 1,
-      currentTimeLeft: 60,
-      isBreakTime: Defaults[3],
       isRunning: Defaults[4]
     });
-    this.toggleTimer();
   }
+
+  /**Why are we still here? 
+   * Just to suffer? 
+   * Every night, I can feel my leg… 
+   * and my arm… 
+   * even my fingers. 
+   * 
+   * The body I’ve lost… 
+   * the comrades I’ve lost… 
+   * won’t stop hurting… 
+   * It’s like they’re all still there. 
+   * 
+   * You feel it, too, don’t you?
+   */
 
   render(){
     return (
@@ -190,9 +157,7 @@ class App extends Component {
             <TimerControls 
               play={this.toggleTimer} 
               reset={this.resetTimer} 
-              isPaused={this.state.isRunning}
-              toggleHackFix={this.toggleHackyBandaidFix}
-              isHackFixEnabled={this.state.isHackyBandaidEnabled}/>
+              isPaused={this.state.isRunning}/>
           </section>
         </div>
         <audio id="beep" preload="auto" src="https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav"></audio>
@@ -277,11 +242,6 @@ class TimerDisplay extends Component {
 }
 
 class TimerControls extends Component {
-  /*{this.props.isHackFixEnabled
-      ? <i className="bi bi-bandaid-fill"></i>
-      : <i className="bi bi-bandaid"></i>}
-      bi-gear-fill
-  */
   render(){
     return (
       <div id="clock-controls">
@@ -298,21 +258,9 @@ class TimerControls extends Component {
           onClick={() => this.props.reset()}>
             <i className="bi bi-arrow-counterclockwise"></i>
         </button>
-        <div className="divider"></div>
-        <button
-          className={"color-button"+(this.props.isHackFixEnabled
-            ? ""
-            : "-red")}
-          id="hackyBandaidToggle"
-          onClick={() => this.props.toggleHackFix()}>
-            {this.props.isHackFixEnabled
-              ? <i className="bi bi-bandaid-fill"></i>
-              : <i className="bi bi-bandaid"></i>}
-        </button>
       </div>
     );
   }
 }
-
 
 export default App;
