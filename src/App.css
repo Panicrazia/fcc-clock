@@ -125,3 +125,7 @@ button {
   background-color: var(--pdarker);
   color: var(--secondary);
 }
+
+.color-button-red{
+  color: red;
+}
