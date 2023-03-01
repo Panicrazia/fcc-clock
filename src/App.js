@@ -121,8 +121,6 @@ class App extends Component {
       currentTimeLeft: Defaults[2],
       isBreakTime: Defaults[3],
       isRunning: Defaults[4],
-      //TODO: remove after fix
-      isHackyBandaidEnabled: false
     });
   }
 
